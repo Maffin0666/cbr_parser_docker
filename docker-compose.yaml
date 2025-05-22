@@ -26,6 +26,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-cbr_data_docker}
+    env_file:
+      - ./.env
     ports:
       - "5432:5432"
     volumes:
@@ -54,13 +56,13 @@ services:
 
   app:
     build: .
-    command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: bash -c "python manage.py migrate && waitress-serve --port=8000 cbr_parser.wsgi:application"
     volumes:
       - .:/app
     environment:
       - DJANGO_SETTINGS_MODULE=cbr_parser.settings
       - CELERY_BROKER_URL=redis://redis:6379/0
-      - POSTGRES_DB=${POSTGRES_DB:-cbr_data}
+      - POSTGRES_DB=${POSTGRES_DB:-cbr_data_docker}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - POSTGRES_HOST=postgres
